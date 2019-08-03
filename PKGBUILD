@@ -1,6 +1,6 @@
 # with fixes by 0xAA <0xaa@dmg.sx>
 pkgname=radare2-git
-pkgver=3.1.3.r18.gb9651f764
+pkgver=3.7.0.r22327.c90f1443de
 pkgrel=1
 pkgdesc="Open-source tools to disasm, debug, analyze and manipulate binary files"
 arch=('i686' 'x86_64')
@@ -11,8 +11,15 @@ depends=('capstone' 'openssl')
 provides=('radare2')
 conflicts=('radare2')
 
-source=("$pkgname"::"git://github.com/radare/radare2.git")
-md5sums=('SKIP')
+source=("$pkgname"::"git://github.com/radare/radare2.git"
+	revert-static-build.patch)
+md5sums=('SKIP'
+         'da24aa7856c7f7767fb77ae4d4809742')
+
+prepare() {
+	cd ${pkgname}
+	git apply -v ${srcdir}/*.patch
+}
 
 pkgver () {
 	cd ${pkgname}

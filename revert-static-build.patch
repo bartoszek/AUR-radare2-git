@@ -1,0 +1,578 @@
+From fed13cdb0216f4e666efd4ddf0ab7d352a2adcd8 Mon Sep 17 00:00:00 2001
+From: bartus <szczepaniak.bartek+github@gmail.com>
+Date: Sat, 3 Aug 2019 18:03:44 +0200
+Subject: [PATCH 1/3] Revert "Add capstone dependency with the mk"
+
+This reverts commit 8b37ac49b609cc69b27a6b3b76fa9d8d819bae83.
+---
+ binr/rabin2/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/binr/rabin2/Makefile b/binr/rabin2/Makefile
+index 33219020b6..0ecb48629d 100644
+--- a/binr/rabin2/Makefile
++++ b/binr/rabin2/Makefile
+@@ -15,6 +15,6 @@ include ../../shlr/grub/deps.mk
+ include ../../shlr/bochs/deps.mk
+ include ../../shlr/qnx/deps.mk
+ include ../../shlr/ar/deps.mk
+-include ../../shlr/capstone.mk
++LINK+=../../shlr/capstone/libcapstone.a
+ 
+ LDFLAGS+=$(LINK)
+-- 
+2.22.0
+
+
+From 92b3c74969334591ec29d30f14f32a34fac054a0 Mon Sep 17 00:00:00 2001
+From: bartus <szczepaniak.bartek+github@gmail.com>
+Date: Sat, 3 Aug 2019 18:04:39 +0200
+Subject: [PATCH 2/3] Revert "Fix android-static ##build"
+
+This reverts commit c93c094c4002d5dd3737374b90fd6f5118ada0fe.
+---
+ binr/blob/Makefile                         |  4 +---
+ binr/rabin2/Makefile                       |  3 +--
+ binr/radare2/Makefile                      |  2 --
+ binr/ragg2/Makefile                        |  4 ----
+ binr/rasm2/Makefile                        |  5 +----
+ binr/rax2/Makefile                         |  4 +---
+ libr/Makefile                              |  9 ++++-----
+ libr/main/deps.mk                          |  1 +
+ libr/rules.mk                              |  2 +-
+ mk/android.mk                              | 11 ++---------
+ mk/armel.mk                                |  1 +
+ mk/cccl.mk                                 |  1 +
+ mk/clang.mk                                |  1 +
+ mk/gcc.mk                                  |  1 +
+ mk/i386-mingw32-gcc.mk                     |  2 +-
+ mk/ios-sdk.mk                              |  1 +
+ mk/mad.mk                                  |  1 +
+ mk/mipsel.mk                               |  1 +
+ mk/qnx.mk                                  |  1 +
+ mk/tcc.mk                                  |  1 +
+ mk/termux-host.mk                          |  1 +
+ mk/termux.mk                               |  1 +
+ mk/wasm.mk                                 |  1 +
+ mk/x86_64-w64-mingw32.static-gcc.mk        |  1 +
+ shlr/Makefile                              |  4 ++--
+ shlr/capstone-patches/fix-visibility.patch | 13 +++++++++++++
+ shlr/capstone.mk                           |  1 -
+ shlr/zip/Makefile                          |  6 ++----
+ sys/android-build.sh                       |  2 +-
+ sys/android-shell.sh                       |  6 ++----
+ 30 files changed, 46 insertions(+), 46 deletions(-)
+ create mode 100644 shlr/capstone-patches/fix-visibility.patch
+ delete mode 100644 shlr/capstone.mk
+
+diff --git a/binr/blob/Makefile b/binr/blob/Makefile
+index 31f459a9b6..a539c387b4 100644
+--- a/binr/blob/Makefile
++++ b/binr/blob/Makefile
+@@ -11,9 +11,7 @@ include ../../config-user.mk
+ 
+ SHLR=../../shlr
+ 
+-ifeq (${ANDROID},1)
+-LDFLAGS+=-lm
+-else
++ifneq (${ANDROID},1)
+ ifneq (${OSTYPE},linux)
+ LDFLAGS+=-lpthread
+ LDFLAGS+=-ldl
+diff --git a/binr/rabin2/Makefile b/binr/rabin2/Makefile
+index 0ecb48629d..a392223711 100644
+--- a/binr/rabin2/Makefile
++++ b/binr/rabin2/Makefile
+@@ -11,10 +11,9 @@ include ../../libr/main/deps.mk
+ include ../../shlr/zip/deps.mk
+ include ../../shlr/gdb/deps.mk
+ include ../../shlr/java/deps.mk
+-include ../../shlr/grub/deps.mk
++#include ../../shlr/grub/deps.mk
+ include ../../shlr/bochs/deps.mk
+ include ../../shlr/qnx/deps.mk
+ include ../../shlr/ar/deps.mk
+-LINK+=../../shlr/capstone/libcapstone.a
+ 
+ LDFLAGS+=$(LINK)
+diff --git a/binr/radare2/Makefile b/binr/radare2/Makefile
+index be03d6940f..0e13e2e9e4 100644
+--- a/binr/radare2/Makefile
++++ b/binr/radare2/Makefile
+@@ -74,7 +74,6 @@ macos-sign-libs:
+ 
+ ifeq ($(OSTYPE),android)
+ LDFLAGS+=${DL_LIBS} -lm
+-LDFLAGS+=../../shlr/capstone/libcapstone.a
+ endif
+ 
+ include ../../libr/socket/deps.mk
+@@ -84,7 +83,6 @@ include ../../shlr/zip/deps.mk
+ include ../../shlr/gdb/deps.mk
+ include ../../shlr/java/deps.mk
+ include ../../shlr/bochs/deps.mk
+-include ../../shlr/grub/deps.mk
+ include ../../shlr/qnx/deps.mk
+ include ../../shlr/ar/deps.mk
+ LDFLAGS+=$(LINK)
+diff --git a/binr/ragg2/Makefile b/binr/ragg2/Makefile
+index 722517643f..416b1af212 100644
+--- a/binr/ragg2/Makefile
++++ b/binr/ragg2/Makefile
+@@ -10,10 +10,6 @@ include ../../libr/main/deps.mk
+ include ../../shlr/ar/deps.mk
+ include ../../libr/socket/deps.mk
+ include ../../shlr/bochs/deps.mk
+-include ../../shlr/gdb/deps.mk
+-include ../../shlr/grub/deps.mk
+-include ../../shlr/java/deps.mk
+-include ../../shlr/capstone.mk
+ include ../../shlr/qnx/deps.mk
+ 
+ LDFLAGS+=$(LINK)
+diff --git a/binr/rasm2/Makefile b/binr/rasm2/Makefile
+index 74928cfb3f..9eb2fcd09c 100644
+--- a/binr/rasm2/Makefile
++++ b/binr/rasm2/Makefile
+@@ -1,11 +1,8 @@
+ BIN=rasm2
+ BINDEPS=r_main
+ 
+-include ../../config-user.mk
+ include ../../libr/main/deps.mk
+ include ../../shlr/zip/deps.mk
+-include ../../shlr/java/deps.mk
+-include ../../shlr/capstone.mk
+ include ../rules.mk
+-LDFLAGS+=$(LINK)
+ 
++LDFLAGS+=$(LINK)
+diff --git a/binr/rax2/Makefile b/binr/rax2/Makefile
+index e8e243d1ff..93557eae16 100644
+--- a/binr/rax2/Makefile
++++ b/binr/rax2/Makefile
+@@ -1,10 +1,8 @@
+ BIN=rax2
+ BINDEPS=r_util r_main
+ 
+-include ../rules.mk
+ include ../../libr/main/deps.mk
+ include ../../shlr/zip/deps.mk
+-include ../../shlr/java/deps.mk
+-include ../../shlr/gdb/deps.mk
++include ../rules.mk
+ 
+ LDFLAGS+=$(LINK)
+diff --git a/libr/Makefile b/libr/Makefile
+index 0324921741..ce8d6ae1d7 100644
+--- a/libr/Makefile
++++ b/libr/Makefile
+@@ -70,7 +70,7 @@ LDFLAGS+=${SSL_LDFLAGS}
+ 	rm -rf .libr
+ 	mkdir -p .libr
+ 	for LIB in $^ ; do \
+-		${PARTIALLD} $(ALFLAGS) $(MLFLAGS) $(PLFLAGS) -o .libr/$$(basename $${LIB}.a).o $${LIB} ; \
++		${PARTIALLD} $(ALFLAGS) $(MLFLAGS) $(PLFLAGS) -o .libr/$$(basename $${LIB} .a).o $${LIB} ; \
+ 	done
+ ifeq ($(OSTYPE),linux)
+ 	for LIB in .libr/* ; do $(OBJCOPY) --localize-hidden $$LIB ; done
+@@ -86,21 +86,20 @@ ifeq ($(OSTYPE),bsd)
+ endif
+ 
+ _libr.${EXT_AR}: .libr
+-	-${AR} crs $@ .libr/*.o
++	${AR} crs $@ .libr/*.o
+ 
+ .libr2: $(wildcard */libr_*.${EXT_AR}) ../shlr/libr_shlr.${EXT_AR}
+ 	rm -rf .libr2
+ 	mkdir -p .libr2
+-	-for LIB in $^ ; do \
++	for LIB in $^ ; do \
+ 		BN=`basename $$LIB` ; \
+ 		echo $$BN ; \
+ 		mkdir -p .libr2/$$BN ; \
+-		echo .libr2/$$BN $$LIB; ${AR} ; \
+ 		( cd .libr2/$$BN ; pwd ; du -hs ../../$$LIB; ${AR} x ../../$$LIB ) ; \
+ 	done
+ 
+ libr.${EXT_AR}: .libr2
+-	-${AR} crs $@ .libr2/*/*.o
++	${AR} crs $@ .libr2/*/*.o
+ 
+ ifeq (1,$(WITH_GPL))
+ E+=../shlr/grub/libgrubfs.${EXT_AR}
+diff --git a/libr/main/deps.mk b/libr/main/deps.mk
+index 0bb4c0daab..500bc8592b 100644
+--- a/libr/main/deps.mk
++++ b/libr/main/deps.mk
+@@ -4,6 +4,7 @@ ifeq ($(MAIN_LINK_ALL),1)
+ DEPS=r_config r_cons r_io r_util r_flag r_asm r_core
+ DEPS+=r_debug r_hash r_bin r_lang r_io r_anal r_parse r_bp r_egg
+ DEPS+=r_reg r_search r_syscall r_socket r_fs r_magic r_crypto
++
+ else
+ # only works
+ WITH_LIBS=0
+diff --git a/libr/rules.mk b/libr/rules.mk
+index 2518fcea26..2a1abe314d 100644
+--- a/libr/rules.mk
++++ b/libr/rules.mk
+@@ -90,7 +90,7 @@ endif
+ 
+ ifeq ($(WITH_LIBR),1)
+ $(LIBAR): ${OBJS}
+-	@[ "${SILENT}" = 1 ] && echo "CC_AR $(LIBAR)" || true
++	[ "${SILENT}" = 1 ] && @echo "CC_AR $(LIBAR)" || true
+ 	rm -f $(LIBAR)
+ 	${CC_AR} ${OBJS} ${SHARED_OBJ}
+ 	${RANLIB} $(LIBAR)
+diff --git a/mk/android.mk b/mk/android.mk
+index 3d4d53995e..5dc96fac6a 100644
+--- a/mk/android.mk
++++ b/mk/android.mk
+@@ -39,20 +39,13 @@ ARCH=aarch64
+ CROSS=${ARCH}-linux-android-
+ endif
+ 
+-ifeq (${NDK_ARCH},)
+-all::
+-	echo "Undefined NDK_ARCH"
+-	exit 1
+-endif
+-
+ RANLIB=${CROSS}ranlib
+ AR=${CROSS}ar
+ CC_AR=${CROSS}ar -r ${LIBAR}
+-PARTIALLD=${CROSS}ld -r
+-# -all_load
++PARTIALLD=${CROSS}ld -r -all_load
+ ONELIB=0
+ OSTYPE=android
+-#LINK=
++LINK=
+ #CC_AR=ndk-ar -r ${LIBAR}
+ PICFLAGS=-fPIC -fpic
+ LDFLAGS_LIB=-shared
+diff --git a/mk/armel.mk b/mk/armel.mk
+index 609f05e56c..9914c9b5cb 100644
+--- a/mk/armel.mk
++++ b/mk/armel.mk
+@@ -12,6 +12,7 @@ PARTIALLD=${CROSS}ld -r --whole-archive
+ 
+ ONELIB=0
+ OSTYPE=gnulinux
++LINK=
+ PICFLAGS=-fPIC -fpic
+ CFLAGS+=${PICFLAGS}
+ LDFLAGS+=-ldl -pthread -lutil
+diff --git a/mk/cccl.mk b/mk/cccl.mk
+index 8058958ac8..80b10e5598 100644
+--- a/mk/cccl.mk
++++ b/mk/cccl.mk
+@@ -1,6 +1,7 @@
+ ifeq (${_INCLUDE_MK_CCCL_},)
+ _INCLUDE_MK_CCCL_=1
+ CC?=cccl
++LINK=
+ RANLIB=echo no ranlib for
+ ONELIB=0
+ CC_AR=arlib q ${LIBAR}
+diff --git a/mk/clang.mk b/mk/clang.mk
+index 60c56b3054..0b91ebf022 100644
+--- a/mk/clang.mk
++++ b/mk/clang.mk
+@@ -1,6 +1,7 @@
+ ifeq (${_INCLUDE_MK_CLANG_},)
+ _INCLUDE_MK_CLANG_=1
+ CC?=clang
++LINK=
+ RANLIB=ranlib
+ ONELIB=0
+ CC_AR=ar q ${LIBAR}
+diff --git a/mk/gcc.mk b/mk/gcc.mk
+index 27759944ed..485b2466d3 100644
+--- a/mk/gcc.mk
++++ b/mk/gcc.mk
+@@ -1,6 +1,7 @@
+ ifeq (${_INCLUDE_MK_GCC_},)
+ _INCLUDE_MK_GCC_=1
+ CC?=gcc
++LINK=
+ OBJCOPY=objcopy
+ RANLIB=ranlib
+ ONELIB=0
+diff --git a/mk/i386-mingw32-gcc.mk b/mk/i386-mingw32-gcc.mk
+index 5be1f548b3..13746de980 100644
+--- a/mk/i386-mingw32-gcc.mk
++++ b/mk/i386-mingw32-gcc.mk
+@@ -5,7 +5,7 @@ CC=${CROSS}gcc
+ RANLIB=${CROSS}ranlib
+ OSTYPE=windows
+ ONELIB=0
+-LINK+=-shared
++LINK=-shared
+ AR=${CROSS}ar
+ CC_AR=${AR} -r ${LIBAR}
+ PARTIALLD=${CROSS}ld -r --whole-archive
+diff --git a/mk/ios-sdk.mk b/mk/ios-sdk.mk
+index 8b8ceab04a..a1d50f59f8 100644
+--- a/mk/ios-sdk.mk
++++ b/mk/ios-sdk.mk
+@@ -4,6 +4,7 @@ USERCC=${CROSS}gcc
+ RANLIB=xcrun --sdk iphonesimulator ranlib
+ ONELIB=0
+ OSTYPE=darwin
++LINK=
+ AR=xcrun --sdk iphonesimulator ar
+ CC_AR=${AR} -r ${LIBAR}
+ PARTIALLD=${CROSS}ld -r -all_load
+diff --git a/mk/mad.mk b/mk/mad.mk
+index 90db33ae48..c529f7226a 100644
+--- a/mk/mad.mk
++++ b/mk/mad.mk
+@@ -1,4 +1,5 @@
+ CC=mad gcc
++LINK=
+ RANLIB=mad ranlib
+ ONELIB=0
+ CC_AR=mad ar qf ${LIBAR}
+diff --git a/mk/mipsel.mk b/mk/mipsel.mk
+index 62719ae2b6..4332ab4cce 100644
+--- a/mk/mipsel.mk
++++ b/mk/mipsel.mk
+@@ -12,6 +12,7 @@ PARTIALLD=${CROSS}ld -r --whole-archive
+ 
+ ONELIB=0
+ OSTYPE=gnulinux
++LINK=
+ PICFLAGS=-fPIC -fpic
+ CFLAGS+=${PICFLAGS}
+ LDFLAGS+=-ldl -pthread -lutil
+diff --git a/mk/qnx.mk b/mk/qnx.mk
+index ec60ebf2b2..7c242c0cb1 100644
+--- a/mk/qnx.mk
++++ b/mk/qnx.mk
+@@ -3,6 +3,7 @@ CC=${CROSS}gcc
+ RANLIB=${CROSS}ranlib
+ ONELIB=0
+ OSTYPE=qnx
++LINK=
+ AR=${CROSS}ar
+ CC_AR=${AR} -r ${LIBAR}
+ PARTIALLD=${CROSS}ld -r --whole-archive
+diff --git a/mk/tcc.mk b/mk/tcc.mk
+index 8f573da16a..6a6c1c84c4 100644
+--- a/mk/tcc.mk
++++ b/mk/tcc.mk
+@@ -1,5 +1,6 @@
+ CC=tcc
+ RANLIB=ranlib
++LINK=
+ ONELIB=0
+ AR=ar
+ CC_AR=${AR} -r ${LIBAR}
+diff --git a/mk/termux-host.mk b/mk/termux-host.mk
+index 46e438b566..54cb420b13 100644
+--- a/mk/termux-host.mk
++++ b/mk/termux-host.mk
+@@ -6,6 +6,7 @@ CC_AR=${AR} -r ${LIBAR}
+ 
+ ONELIB=0
+ OSTYPE=android
++LINK=
+ PICFLAGS=-fPIC -fpic
+ CFLAGS+=${PICFLAGS}
+ CC_LIB=${CC} -shared -o
+diff --git a/mk/termux.mk b/mk/termux.mk
+index 2bf38cb1f2..3340b6e22e 100644
+--- a/mk/termux.mk
++++ b/mk/termux.mk
+@@ -11,6 +11,7 @@ PARTIALLD=ld -r --whole-archive
+ 
+ ONELIB=0
+ OSTYPE=android
++LINK=
+ PICFLAGS=-fPIC -fpic
+ CFLAGS+=${PICFLAGS}
+ CC_LIB=${CC} -shared -o
+diff --git a/mk/wasm.mk b/mk/wasm.mk
+index 5bce5f4905..70e37364dc 100644
+--- a/mk/wasm.mk
++++ b/mk/wasm.mk
+@@ -5,6 +5,7 @@ EXT_SO=.wasm
+ EXT_AR=a
+ CC=emcc
+ AR=emar
++LINK=
+ RANLIB=emranlib
+ ONELIB=0
+ CC_AR=emar q ${LIBAR}
+diff --git a/mk/x86_64-w64-mingw32.static-gcc.mk b/mk/x86_64-w64-mingw32.static-gcc.mk
+index f93eacb465..54efb4be95 100644
+--- a/mk/x86_64-w64-mingw32.static-gcc.mk
++++ b/mk/x86_64-w64-mingw32.static-gcc.mk
+@@ -4,6 +4,7 @@ CC=${CROSS}gcc
+ RANLIB=${CROSS}ranlib
+ ONELIB=0
+ OSTYPE=windows
++LINK=
+ AR=${CROSS}ar
+ CC_AR=${AR} -r ${LIBAR}
+ PARTIALLD=${CROSS}ld -r --whole-archive
+diff --git a/shlr/Makefile b/shlr/Makefile
+index 64f0435add..09a8e7e96d 100644
+--- a/shlr/Makefile
++++ b/shlr/Makefile
+@@ -369,7 +369,7 @@ libr_shlr.${EXT_AR}:
+ 	rm -rf .libr
+ 	mkdir .libr
+ 	for LIB in ${SHLRS} ; do \
+-		if [ -f "$${LIB}" ]; then ${PARTIALLD} -o .libr/$$(basename $${LIB}.a).o $${LIB} ; fi ; \
++		if [ -f "$${LIB}" ]; then ${PARTIALLD} -o .libr/$$(basename $${LIB} .a).o $${LIB} ; fi ; \
+ 	done
+ 	${AR} crs $@ .libr/*.o
+ 
+@@ -380,4 +380,4 @@ mpc:
+ 	$(MAKE) -C mpc all
+ 
+ mpc-clean clean-mpc:
+-	$(MAKE) -C mpc clean
++	$(MAKE) -C mpc clean
+\ No newline at end of file
+diff --git a/shlr/capstone-patches/fix-visibility.patch b/shlr/capstone-patches/fix-visibility.patch
+new file mode 100644
+index 0000000000..fed2810f1b
+--- /dev/null
++++ b/shlr/capstone-patches/fix-visibility.patch
+@@ -0,0 +1,13 @@
++diff --git a/include/capstone/capstone.h b/include/capstone/capstone.h
++index 23c13d5..a395251 100644
++--- a/include/capstone/capstone.h
+++++ b/include/capstone/capstone.h
++@@ -31,7 +31,7 @@ extern "C" {
++ #else
++ #define CAPSTONE_API
++ #if defined(__GNUC__) && !defined(CAPSTONE_STATIC)
++-#define CAPSTONE_EXPORT __attribute__((visibility("default")))
+++#define CAPSTONE_EXPORT __attribute__((visibility("hidden")))
++ #else    // defined(CAPSTONE_STATIC)
++ #define CAPSTONE_EXPORT
++ #endif
+diff --git a/shlr/capstone.mk b/shlr/capstone.mk
+deleted file mode 100644
+index b3cc42d244..0000000000
+--- a/shlr/capstone.mk
++++ /dev/null
+@@ -1 +0,0 @@
+-LINK+=$(SHLR)/capstone/libcapstone.a
+diff --git a/shlr/zip/Makefile b/shlr/zip/Makefile
+index b8c08e38cf..bd255cbf90 100644
+--- a/shlr/zip/Makefile
++++ b/shlr/zip/Makefile
+@@ -4,24 +4,22 @@ LIBAR=librz.$(EXT_AR)
+ include ../../config-user.mk
+ include ../../libr/config.mk
+ include ../../mk/platform.mk
+-include ../../mk/$(COMPILER).mk
++include ../../mk/${COMPILER}.mk
+ 
+ ifeq ($(USE_LIB_ZIP),1)
+ all:
+ 	rm -f librz.$(EXT_AR)
+ else
+ 
++
+ LIBAR=librz.$(EXT_AR)
+ RANLIB?=ranlib
+ 
+ all: $(LIBAR)
+ 
+ $(LIBAR): zip/libr_zip.$(EXT_AR)
+-	@echo ${CC_AR} zlib/*.o zip/*.o
+ 	${CC_AR} zlib/*.o zip/*.o
+-	@echo $(RANLIB) librz.$(EXT_AR)
+ 	$(RANLIB) librz.$(EXT_AR)
+-	sleep 10
+ 
+ zip/libr_zip.$(EXT_AR): zlib/libr_z.$(EXT_AR)
+ 	$(MAKE) -C zip
+diff --git a/sys/android-build.sh b/sys/android-build.sh
+index 0410201c40..a80af51935 100755
+--- a/sys/android-build.sh
++++ b/sys/android-build.sh
+@@ -60,7 +60,7 @@ x64-static|static-x64)
+ 	STATIC_BUILD=1
+ 	;;
+ arm64-static|static-arm64)
+-	NDK_ARCH=aarch64
++	NDK_ARCH=arm64
+ 	STATIC_BUILD=1
+ 	;;
+ arm-static|static-arm)
+diff --git a/sys/android-shell.sh b/sys/android-shell.sh
+index 4d501fb64b..e0d16f7507 100755
+--- a/sys/android-shell.sh
++++ b/sys/android-shell.sh
+@@ -6,7 +6,6 @@ if [ -n "$1" ]; then
+ 	shift
+ fi
+ export ANDROID=1
+-ARCH=${NDK_ARCH}
+ case "${NDK_ARCH}" in
+ mips64)
+ 	export NDK_ARCH
+@@ -26,10 +25,9 @@ x86|x86_64)
+ 	export NDK_ARCH
+ 	;;
+ aarch64|arm64)
+-	NDK_ARCH=aarch64
++	NDK_ARCH=arm64
+ 	export NDK_ARCH
+ 	AR=aarch64-linux-android-ar
+-	ARCH=arm64
+ 	RANLIB=aarch64-linux-android-ranlib
+ 	;;
+ arm)
+@@ -89,7 +87,7 @@ echo NDK=$NDK
+ echo NDK_ARCH=$NDK_ARCH
+ 
+ echo "Building the standalone NDK toolchain..."
+-${NDK}/build/tools/make_standalone_toolchain.py --arch=${ARCH} --install-dir=/tmp/ndk/ --api=28 --force
++${NDK}/build/tools/make_standalone_toolchain.py --arch=${NDK_ARCH} --install-dir=/tmp/ndk/ --api=28 --force
+ (
+ cd /tmp/ndk/bin/ && \
+ ln -fs clang ndk-gcc && \
+-- 
+2.22.0
+
+
+From a2072a593a4611aa6642d8e5dc18fe75bdd304c1 Mon Sep 17 00:00:00 2001
+From: bartus <szczepaniak.bartek+github@gmail.com>
+Date: Sat, 3 Aug 2019 18:07:46 +0200
+Subject: [PATCH 3/3] revert capstone.mk in binr/rules.mk
+
+---
+ binr/rules.mk | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/binr/rules.mk b/binr/rules.mk
+index e5940f0ae0..70076d70f0 100644
+--- a/binr/rules.mk
++++ b/binr/rules.mk
+@@ -8,9 +8,9 @@ endif
+ CFLAGS+=-I$(LTOP)/include
+ 
+ ifeq (${COMPILER},emscripten)
+-LINK+=$(SHLR)/libr/libr.a
+-LINK+=$(SHLR)/sdb/src/libsdb.a
+-include $(SHLR)/capstone.mk
++LINK+=../../libr/libr.a
++LINK+=../../shlr/sdb/src/libsdb.a
++LINK+=../../shlr/capstone/libcapstone.a
+ CFLAGS+= -s SIDE_MODULE=1
+ #CFLAGS+=-s ERROR_ON_UNDEFINED_SYMBOLS=0
+ #EXT_EXE=.js
+-- 
+2.22.0
+
